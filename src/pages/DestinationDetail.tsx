@@ -33,6 +33,10 @@ const DestinationDetail = () => {
     );
   }, [location.state, decodedName, decodedCountry]);
 
+  // Scroll to top when component mounts or destination changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [destination]);
   useEffect(() => {
     if (destination) {
       const pageTitle = `${destination.name} - ${destination.country} | Destination Details`;
