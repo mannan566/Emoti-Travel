@@ -72,7 +72,7 @@ export const DestinationCard = ({
   };
 
   const handleGetGoingPlans = () => {
-    const existing = selectedPlans.find(
+    const existing = selectedPlans.find( 
       (plan) => plan.name === name && plan.region === country
     );
     if (!existing) {
@@ -140,7 +140,7 @@ export const DestinationCard = ({
         .destination-card {
           background: #fff;
           border-radius: 1rem;
-          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.8);
+          box-shadow: 0 6px 22px rgba(0,0,0,0.08);
           border: 1px solid #ececec;
           width: 100%;
           height: 100%;
