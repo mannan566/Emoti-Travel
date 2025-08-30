@@ -202,7 +202,7 @@ export const DestinationCard = ({
         /* Title + Location block */
         .destination-title {
           font-size: 1.35rem;
-          font-weight: 800;
+          font-weight: 1800;
           margin: 0;
           color: #101828;
           letter-spacing: -0.01em;
