@@ -152,7 +152,7 @@ export const DestinationCard = ({
           transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
         .destination-card:hover {
-          box-shadow: 0px 10px 28px rgba(0,0,0,0.16);
+          box-shadow: 0px 10px 28px rgba(0,0,0,0.8);
           transform: translateY(-6px);
         }
 
