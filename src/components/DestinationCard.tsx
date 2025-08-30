@@ -140,7 +140,7 @@ export const DestinationCard = ({
         .destination-card {
           background: #fff;
           border-radius: 1rem;
-          box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+          box-shadow: 0 6px 22px rgba(0, 0, 0, 0.8);
           border: 1px solid #ececec;
           width: 100%;
           height: 100%;
