@@ -1,9 +1,13 @@
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { DestinationCard } from "@/components/DestinationCard";
+import { GoogleMapSearch } from "@/components/GoogleMapSearch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Star } from "lucide-react";
 import { keralaDestinations } from "@/data/destinations";
+
+// Kerala center coordinates (Kochi)
+const KERALA_CENTER = { lat: 9.9312, lng: 76.2673 };
 
 const Kerala = () => {
   return (
@@ -73,6 +77,17 @@ const Kerala = () => {
               </div>
             </div>
           </Card>
+        </div>
+      </section>
+
+      {/* Google Maps Search Section */}
+      <section className="py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <GoogleMapSearch 
+            region="Kerala" 
+            center={KERALA_CENTER}
+            zoom={8}
+          />
         </div>
       </section>
 

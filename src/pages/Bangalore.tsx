@@ -1,9 +1,13 @@
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { DestinationCard } from "@/components/DestinationCard";
+import { GoogleMapSearch } from "@/components/GoogleMapSearch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Star } from "lucide-react";
 import { bangaloreDestinations } from "@/data/destinations";
+
+// Bangalore center coordinates
+const BANGALORE_CENTER = { lat: 12.9716, lng: 77.5946 };
 
 const Bangalore = () => {
   return (
@@ -73,6 +77,17 @@ const Bangalore = () => {
               </div>
             </div>
           </Card>
+        </div>
+      </section>
+
+      {/* Google Maps Search Section */}
+      <section className="py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <GoogleMapSearch 
+            region="Bangalore" 
+            center={BANGALORE_CENTER}
+            zoom={11}
+          />
         </div>
       </section>
 
