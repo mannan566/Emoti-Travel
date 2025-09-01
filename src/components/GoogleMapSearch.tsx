@@ -70,15 +70,15 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
     setIsMapLoaded(true);
   }, [center, zoom]);
 
-  // Load Google Maps API script
+  // Load Google Maps API
   useEffect(() => {
-    if (window.google && window.google.maps) {
+    if (window.google) {
       initializeMap();
       return;
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dO_BjuE9dOggjw&libraries=places&callback=initMap`; 
     script.async = true;
     script.defer = true;
 
@@ -143,13 +143,15 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
 
     serviceRef.current.textSearch(request, (results: PlaceResult[], status: any) => {
       setIsLoading(false);
-
+      
       if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
         const filteredResults = results.slice(0, 10); // Limit to 10 results
         setSearchResults(filteredResults);
-
+        
+        // Add markers for all results
         filteredResults.forEach(place => addMarker(place));
-
+        
+        // Fit map to show all markers
         if (filteredResults.length > 0) {
           const bounds = new window.google.maps.LatLngBounds();
           filteredResults.forEach(place => {
@@ -181,16 +183,17 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
       return;
     }
 
+    // Create a destination object from the place
     const newDestination = {
       name: place.name,
       country: region,
-      image: place.photos && place.photos[0]
-        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=YOUR_API_KEY`
+      image: place.photos && place.photos[0] 
+        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dO_BjuE9dOggjw`
         : 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
       emotionalMatch: 'Custom Discovery',
       matchPercentage: 85,
       description: `Discovered through map search: ${place.formatted_address}`,
-      culturalHighlights: place.types.filter(type =>
+      culturalHighlights: place.types.filter(type => 
         ['tourist_attraction', 'museum', 'park', 'temple', 'church'].includes(type)
       ).slice(0, 3),
       safetyLevel: 'high' as const,
@@ -218,6 +221,7 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
 
   return (
     <div className="space-y-6">
+      {/* Search Section */}
       <Card className="p-6 bg-card/80 backdrop-blur-sm">
         <h3 className="text-2xl font-semibold mb-4 text-foreground flex items-center">
           <MapPin className="w-6 h-6 mr-2 text-primary" />
@@ -226,16 +230,16 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
         <p className="text-muted-foreground mb-6">
           Search for attractions, restaurants, temples, or any places of interest in {region}
         </p>
-
+        
         <div className="flex gap-3 mb-4">
           <Input
-            placeholder={`Search places in ${region}...`}
+            placeholder={`Search places in ${region}... (e.g., "temples", "beaches", "restaurants")`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}
             className="flex-1"
           />
-          <Button
+          <Button 
             onClick={searchPlaces}
             disabled={!searchQuery.trim() || isLoading || !isMapLoaded}
             className="bg-gradient-ocean text-white"
@@ -253,14 +257,16 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
         )}
       </Card>
 
+      {/* Map Container */}
       <Card className="overflow-hidden bg-card/80 backdrop-blur-sm">
-        <div
-          ref={mapRef}
+        <div 
+          ref={mapRef} 
           className="w-full h-[400px] bg-muted/50"
           style={{ minHeight: '400px' }}
         />
       </Card>
 
+      {/* Search Results */}
       {searchResults.length > 0 && (
         <Card className="p-6 bg-card/80 backdrop-blur-sm">
           <h3 className="text-xl font-semibold mb-4 text-foreground">
@@ -268,7 +274,7 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {searchResults.map((place) => (
-              <div
+              <div 
                 key={place.place_id}
                 className="p-4 border border-border/50 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
               >
@@ -280,11 +286,11 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
                     </Badge>
                   )}
                 </div>
-
+                
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                   {place.formatted_address}
                 </p>
-
+                
                 {place.types.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-3">
                     {place.types.slice(0, 3).map((type, index) => (
@@ -294,7 +300,7 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
                     ))}
                   </div>
                 )}
-
+                
                 <Button
                   size="sm"
                   onClick={() => addPlaceToPlans(place)}
