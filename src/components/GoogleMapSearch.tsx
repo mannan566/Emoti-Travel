@@ -78,7 +78,7 @@ export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchPr
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dO_BjuE9dOggjw&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyCq8c7j7IvoRWuZKLhTX_TcR1us674RxvU`;
     script.async = true;
     script.defer = true;
 
