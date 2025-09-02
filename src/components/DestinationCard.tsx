@@ -72,7 +72,7 @@ export const DestinationCard = ({
   };
 
   const handleGetGoingPlans = () => {
-    const existing = selectedPlans.find( 
+    const existing = selectedPlans.find(
       (plan) => plan.name === name && plan.region === country
     );
     if (!existing) {
@@ -152,7 +152,7 @@ export const DestinationCard = ({
           transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
         .destination-card:hover {
-          box-shadow: 0px 10px 28px rgba(0,0,0,0.6);
+          box-shadow: 0px 10px 28px rgba(0,0,0,0.16);
           transform: translateY(-6px);
         }
 
@@ -202,7 +202,7 @@ export const DestinationCard = ({
         /* Title + Location block */
         .destination-title {
           font-size: 1.35rem;
-          font-weight: 1500;
+          font-weight: 800;
           margin: 0;
           color: #101828;
           letter-spacing: -0.01em;

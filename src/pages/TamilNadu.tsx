@@ -1,13 +1,9 @@
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { DestinationCard } from "@/components/DestinationCard";
-import { GoogleMapSearch } from "@/components/GoogleMapSearch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Star } from "lucide-react";
 import { tamilNaduDestinations } from "@/data/destinations";
-
-// Tamil Nadu center coordinates (Chennai)
-const TAMIL_NADU_CENTER = { lat: 13.0827, lng: 80.2707 };
 
 const TamilNadu = () => {
   return (
@@ -77,17 +73,6 @@ const TamilNadu = () => {
               </div>
             </div>
           </Card>
-        </div>
-      </section>
-
-      {/* Google Maps Search Section */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <GoogleMapSearch 
-            region="Tamil Nadu" 
-            center={TAMIL_NADU_CENTER}
-            zoom={7}
-          />
         </div>
       </section>
 
