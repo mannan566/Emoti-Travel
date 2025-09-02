@@ -1,6 +1,6 @@
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { DestinationCard } from "@/components/DestinationCard";
-import { GoogleMapSearch } from "@/components/GoogleMapSearch";
+import { MapTilerSearch } from "@/components/MapTilerSearch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Star } from "lucide-react";
@@ -83,7 +83,7 @@ const TamilNadu = () => {
       {/* Google Maps Search Section */}
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          <GoogleMapSearch 
+          <MapTilerSearch 
             region="Tamil Nadu" 
             center={TAMIL_NADU_CENTER}
             zoom={7}
