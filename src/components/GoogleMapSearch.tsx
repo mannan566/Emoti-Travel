@@ -6,30 +6,37 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Search, Plus, Check } from 'lucide-react';
 import { usePlans } from '@/contexts/PlanContext';
 import { useToast } from '@/hooks/use-toast';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
 
-interface MapTilerSearchProps {
+interface GoogleMapSearchProps {
   region: 'Tamil Nadu' | 'Kerala' | 'Bangalore';
   center: { lat: number; lng: number };
   zoom?: number;
 }
 
 interface PlaceResult {
-  id: string;
+  place_id: string;
   name: string;
-  address: string;
-  coordinates: [number, number]; // [lng, lat]
-  category: string;
-  distance?: number;
+  formatted_address: string;
+  geometry: {
+    location: { lat: number; lng: number };
+  };
+  rating?: number;
+  types: string[];
+  photos?: any[];
 }
 
-const MAPTILER_API_KEY = 'cKC1OtBmTMsRRXDVz2zq';
+declare global {
+  interface Window {
+    google: any;
+    initMap: () => void;
+  }
+}
 
-export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProps) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
+export const GoogleMapSearch = ({ region, center, zoom = 10 }: GoogleMapSearchProps) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const serviceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<PlaceResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,115 +44,120 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
   const { addPlan, selectedPlans } = usePlans();
   const { toast } = useToast();
 
-  // Initialize MapTiler map
+  // Initialize Google Maps
   const initializeMap = useCallback(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!window.google || !mapRef.current) return;
 
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_API_KEY}`,
-      center: [center.lng, center.lat],
-      zoom: zoom,
-      attributionControl: true,
+    const map = new window.google.maps.Map(mapRef.current, {
+      center,
+      zoom,
+      styles: [
+        {
+          featureType: 'water',
+          elementType: 'geometry',
+          stylers: [{ color: '#3b82f6' }]
+        },
+        {
+          featureType: 'landscape',
+          elementType: 'geometry',
+          stylers: [{ color: '#f8fafc' }]
+        }
+      ]
     });
 
-    map.current.on('load', () => {
-      setIsMapLoaded(true);
-    });
-
-    // Add navigation controls
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
+    mapInstanceRef.current = map;
+    serviceRef.current = new window.google.maps.places.PlacesService(map);
+    setIsMapLoaded(true);
   }, [center, zoom]);
 
+  // Load Google Maps API
   useEffect(() => {
-    initializeMap();
+    if (window.google) {
+      initializeMap();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dO_BjuE9dOggjw&libraries=places&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+
+    window.initMap = initializeMap;
+    document.head.appendChild(script);
+
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
       }
     };
   }, [initializeMap]);
 
   // Clear existing markers
   const clearMarkers = () => {
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach(marker => marker.setMap(null));
     markersRef.current = [];
   };
 
   // Add marker to map
   const addMarker = (place: PlaceResult) => {
-    if (!map.current) return;
+    if (!mapInstanceRef.current) return;
 
-    const marker = new maplibregl.Marker({
-      color: '#3b82f6'
-    })
-      .setLngLat(place.coordinates)
-      .setPopup(
-        new maplibregl.Popup({ offset: 25 })
-          .setHTML(`
-            <div style="padding: 12px; max-width: 250px;">
-              <h3 style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${place.name}</h3>
-              <p style="margin: 0 0 8px 0; font-size: 14px; color: #666;">${place.address}</p>
-              <p style="margin: 0; font-size: 12px; color: #888; text-transform: capitalize;">${place.category}</p>
-            </div>
-          `)
-      )
-      .addTo(map.current);
+    const marker = new window.google.maps.Marker({
+      position: place.geometry.location,
+      map: mapInstanceRef.current,
+      title: place.name,
+      icon: {
+        url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        scaledSize: new window.google.maps.Size(32, 32)
+      }
+    });
+
+    const infoWindow = new window.google.maps.InfoWindow({
+      content: `
+        <div style="padding: 8px; max-width: 200px;">
+          <h3 style="margin: 0 0 8px 0; font-weight: bold;">${place.name}</h3>
+          <p style="margin: 0 0 8px 0; font-size: 12px; color: #666;">${place.formatted_address}</p>
+          ${place.rating ? `<p style="margin: 0; font-size: 12px;">⭐ ${place.rating}/5</p>` : ''}
+        </div>
+      `
+    });
+
+    marker.addListener('click', () => {
+      infoWindow.open(mapInstanceRef.current, marker);
+    });
 
     markersRef.current.push(marker);
   };
 
-  // Search places using MapTiler Geocoding API
+  // Search places
   const searchPlaces = async () => {
-    if (!searchQuery.trim()) return;
+    if (!serviceRef.current || !searchQuery.trim()) return;
 
     setIsLoading(true);
     clearMarkers();
 
-    try {
-      // Create a bounding box around the region for more accurate results
-      const bbox = getBoundingBox(region);
-      const query = encodeURIComponent(`${searchQuery} ${region}`);
-      
-      const response = await fetch(
-        `https://api.maptiler.com/geocoding/${query}.json?key=${MAPTILER_API_KEY}&bbox=${bbox}&limit=10&types=poi,address`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Search failed');
-      }
+    const request = {
+      query: `${searchQuery} in ${region}`,
+      fields: ['place_id', 'name', 'formatted_address', 'geometry', 'rating', 'types', 'photos']
+    };
 
-      const data = await response.json();
+    serviceRef.current.textSearch(request, (results: PlaceResult[], status: any) => {
+      setIsLoading(false);
       
-      if (data.features && data.features.length > 0) {
-        const results: PlaceResult[] = data.features.map((feature: any, index: number) => ({
-          id: feature.id || `place-${index}`,
-          name: feature.text || feature.place_name || 'Unknown Place',
-          address: feature.place_name || feature.properties?.address || 'Address not available',
-          coordinates: feature.center,
-          category: feature.properties?.category || getPlaceCategory(feature.place_type?.[0] || 'place'),
-        }));
-
-        setSearchResults(results);
+      if (status === window.google.maps.places.PlacesServiceStatus.OK && results) {
+        const filteredResults = results.slice(0, 10); // Limit to 10 results
+        setSearchResults(filteredResults);
         
         // Add markers for all results
-        results.forEach(place => addMarker(place));
+        filteredResults.forEach(place => addMarker(place));
         
         // Fit map to show all markers
-        if (results.length > 0 && map.current) {
-          const bounds = new maplibregl.LngLatBounds();
-          results.forEach(place => {
-            bounds.extend(place.coordinates);
+        if (filteredResults.length > 0) {
+          const bounds = new window.google.maps.LatLngBounds();
+          filteredResults.forEach(place => {
+            bounds.extend(place.geometry.location);
           });
-          map.current.fitBounds(bounds, { padding: 50 });
+          mapInstanceRef.current.fitBounds(bounds);
         }
       } else {
         setSearchResults([]);
@@ -154,43 +166,7 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
           description: "Try searching for a different location or attraction."
         });
       }
-    } catch (error) {
-      console.error('Search error:', error);
-      toast({
-        title: "Search failed",
-        description: "Please try again or check your internet connection."
-      });
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Get bounding box for each region
-  const getBoundingBox = (region: string) => {
-    switch (region) {
-      case 'Tamil Nadu':
-        return '76.2,8.0,80.3,13.5'; // Tamil Nadu bounds
-      case 'Kerala':
-        return '74.8,8.2,77.4,12.8'; // Kerala bounds
-      case 'Bangalore':
-        return '77.3,12.7,77.8,13.2'; // Bangalore metropolitan area
-      default:
-        return '74.0,8.0,80.5,13.5'; // Default South India bounds
-    }
-  };
-
-  // Categorize places based on type
-  const getPlaceCategory = (placeType: string) => {
-    const categoryMap: { [key: string]: string } = {
-      'poi': 'Point of Interest',
-      'address': 'Location',
-      'place': 'Place',
-      'locality': 'City/Town',
-      'region': 'Region',
-      'country': 'Country'
-    };
-    return categoryMap[placeType] || 'Place';
+    });
   };
 
   // Add place to dashboard
@@ -211,11 +187,15 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
     const newDestination = {
       name: place.name,
       country: region,
-      image: getRegionDefaultImage(region),
+      image: place.photos && place.photos[0] 
+        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=AIzaSyBFw0Qbyq9zTFTd-tUY6dO_BjuE9dOggjw`
+        : 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
       emotionalMatch: 'Custom Discovery',
       matchPercentage: 85,
-      description: `Discovered through map search: ${place.address}`,
-      culturalHighlights: [place.category, 'Local Discovery', 'Map Search'],
+      description: `Discovered through map search: ${place.formatted_address}`,
+      culturalHighlights: place.types.filter(type => 
+        ['tourist_attraction', 'museum', 'park', 'temple', 'church'].includes(type)
+      ).slice(0, 3),
       safetyLevel: 'high' as const,
       bestTime: 'Year-round',
       priceRange: '$$' as const,
@@ -227,20 +207,6 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
       title: "Added to plans!",
       description: `${place.name} has been added to your travel dashboard.`
     });
-  };
-
-  // Get default image based on region
-  const getRegionDefaultImage = (region: string) => {
-    switch (region) {
-      case 'Tamil Nadu':
-        return 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&q=80';
-      case 'Kerala':
-        return 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&q=80';
-      case 'Bangalore':
-        return 'https://images.unsplash.com/photo-1596484552834-6a58f850e0a1?w=800&q=80';
-      default:
-        return 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80';
-    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -286,7 +252,7 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
         {!isMapLoaded && (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-            <p className="text-sm text-muted-foreground">Loading Map...</p>
+            <p className="text-sm text-muted-foreground">Loading Google Maps...</p>
           </div>
         )}
       </Card>
@@ -294,7 +260,7 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
       {/* Map Container */}
       <Card className="overflow-hidden bg-card/80 backdrop-blur-sm">
         <div 
-          ref={mapContainer} 
+          ref={mapRef} 
           className="w-full h-[400px] bg-muted/50"
           style={{ minHeight: '400px' }}
         />
@@ -309,19 +275,31 @@ export const MapTilerSearch = ({ region, center, zoom = 10 }: MapTilerSearchProp
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {searchResults.map((place) => (
               <div 
-                key={place.id}
+                key={place.place_id}
                 className="p-4 border border-border/50 rounded-lg bg-background/50 hover:bg-background/70 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-semibold text-foreground">{place.name}</h4>
-                  <Badge variant="secondary" className="text-xs capitalize">
-                    {place.category}
-                  </Badge>
+                  {place.rating && (
+                    <Badge variant="secondary" className="text-xs">
+                      ⭐ {place.rating}
+                    </Badge>
+                  )}
                 </div>
                 
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {place.address}
+                  {place.formatted_address}
                 </p>
+                
+                {place.types.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {place.types.slice(0, 3).map((type, index) => (
+                      <Badge key={index} variant="outline" className="text-xs capitalize">
+                        {type.replace(/_/g, ' ')}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
                 
                 <Button
                   size="sm"
