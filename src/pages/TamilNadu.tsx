@@ -1,5 +1,6 @@
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { DestinationCard } from "@/components/DestinationCard";
+import { GoogleMapEmbed } from "@/components/GoogleMapEmbed";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Star } from "lucide-react";
@@ -94,6 +95,27 @@ const TamilNadu = () => {
               <DestinationCard key={index} {...destination} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Map Section */}
+      <section className="py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Explore Tamil Nadu
+              <span className="bg-gradient-nature bg-clip-text text-transparent"> on Map</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Search for temples, hill stations, beaches, and cultural sites across Tamil Nadu
+            </p>
+          </div>
+          
+          <GoogleMapEmbed
+            region="Tamil Nadu"
+            embedUrl="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d72624.2633302847!2d79.82120989246204!3d11.936286365839566!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1756863984310!5m2!1sen!2sin"
+            searchBounds={{ lat: 11.1271, lng: 78.6569, radius: 50000 }}
+          />
         </div>
       </section>
 

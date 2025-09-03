@@ -1,5 +1,6 @@
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { DestinationCard } from "@/components/DestinationCard";
+import { GoogleMapEmbed } from "@/components/GoogleMapEmbed";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Calendar, Star } from "lucide-react";
@@ -94,6 +95,27 @@ const Kerala = () => {
               <DestinationCard key={index} {...destination} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Map Section */}
+      <section className="py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-foreground mb-4">
+              Explore Kerala
+              <span className="bg-gradient-ocean bg-clip-text text-transparent"> on Map</span>
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Discover backwaters, hill stations, beaches, and Ayurvedic centers across God's Own Country
+            </p>
+          </div>
+          
+          <GoogleMapEmbed
+            region="Kerala"
+            embedUrl="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2003236.5359239418!2d75.5!3d10.5!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1756863984310!5m2!1sen!2sin"
+            searchBounds={{ lat: 10.8505, lng: 76.2711, radius: 40000 }}
+          />
         </div>
       </section>
 
