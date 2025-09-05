@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Plus, Star, Clock } from "lucide-react";
+import { Search, MapPin, Plus, Star, Clock, Navigation, Route, Car, Clock3 } from "lucide-react";
 import { usePlans } from "@/contexts/PlanContext";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface GoogleMapEmbedProps {
   region: "Tamil Nadu" | "Kerala" | "Bangalore";
@@ -40,6 +41,14 @@ export const GoogleMapEmbed = ({ region, embedUrl, searchBounds }: GoogleMapEmbe
   const [isSearching, setIsSearching] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<PlaceResult | null>(null);
   const mapRef = useRef<HTMLIFrameElement>(null);
+  const [fromLocation, setFromLocation] = useState("");
+  const [toLocation, setToLocation] = useState("");
+  const [routeInfo, setRouteInfo] = useState<{
+    distance: string;
+    duration: string;
+    mode: string;
+  } | null>(null);
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const { addPlan } = usePlans();
   const { toast } = useToast();
 
@@ -142,6 +151,51 @@ export const GoogleMapEmbed = ({ region, embedUrl, searchBounds }: GoogleMapEmbe
     return baseResults[region] || [];
   };
 
+  const calculateRoute = async () => {
+    if (!fromLocation.trim() || !toLocation.trim()) {
+      toast({
+        title: "Missing locations",
+        description: "Please enter both from and to locations.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsCalculatingRoute(true);
+    
+    // Simulate route calculation with mock data
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Mock route calculation based on region and locations
+    const mockRouteData = {
+      distance: `${Math.floor(Math.random() * 200) + 50} km`,
+      duration: `${Math.floor(Math.random() * 4) + 1}h ${Math.floor(Math.random() * 60)}m`,
+      mode: "driving"
+    };
+    
+    setRouteInfo(mockRouteData);
+    setIsCalculatingRoute(false);
+    
+    toast({
+      title: "Route calculated!",
+      description: `Distance: ${mockRouteData.distance}, Duration: ${mockRouteData.duration}`,
+    });
+  };
+
+  const navigateToPlace = (place: PlaceResult) => {
+    // Create Google Maps navigation URL
+    const destination = encodeURIComponent(`${place.name}, ${place.formatted_address}`);
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    
+    // Open in new tab
+    window.open(mapsUrl, '_blank');
+    
+    toast({
+      title: "Opening navigation",
+      description: `Navigating to ${place.name}`,
+    });
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     searchPlaces(searchQuery);
@@ -213,6 +267,69 @@ export const GoogleMapEmbed = ({ region, embedUrl, searchBounds }: GoogleMapEmbe
             </Button>
           </form>
 
+          {/* Route Calculation Section */}
+          <Card className="mb-4 bg-muted/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Route className="w-5 h-5" />
+                Route Calculator
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Input
+                  placeholder="From location..."
+                  value={fromLocation}
+                  onChange={(e) => setFromLocation(e.target.value)}
+                />
+                <Input
+                  placeholder="To location..."
+                  value={toLocation}
+                  onChange={(e) => setToLocation(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <Button 
+                  onClick={calculateRoute}
+                  disabled={isCalculatingRoute}
+                  className="flex-1"
+                >
+                  {isCalculatingRoute ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                      Calculating...
+                    </>
+                  ) : (
+                    <>
+                      <Navigation className="w-4 h-4 mr-2" />
+                      Calculate Route
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {routeInfo && (
+                <div className="p-4 bg-background rounded-lg border">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Car className="w-4 h-4" />
+                    Route Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-muted-foreground" />
+                      <span>Distance: <strong>{routeInfo.distance}</strong></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock3 className="w-4 h-4 text-muted-foreground" />
+                      <span>Duration: <strong>{routeInfo.duration}</strong></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Map Embed */}
           <div className="relative w-full h-[400px] rounded-lg overflow-hidden border border-border/50">
             <iframe
@@ -283,6 +400,19 @@ export const GoogleMapEmbed = ({ region, embedUrl, searchBounds }: GoogleMapEmbe
                     <Plus className="w-3 h-3 mr-1" />
                     Add to Plans
                   </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigateToPlace(place);
+                    }}
+                    className="w-full mt-2"
+                  >
+                    <Navigation className="w-3 h-3 mr-1" />
+                    Navigate
+                  </Button>
                 </div>
               ))}
             </div>
@@ -328,6 +458,13 @@ export const GoogleMapEmbed = ({ region, embedUrl, searchBounds }: GoogleMapEmbe
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add to Travel Plans
+                </Button>
+                <Button
+                  onClick={() => navigateToPlace(selectedPlace)}
+                  className="flex-1 bg-gradient-sunset text-white hover:shadow-glow transition-all duration-300"
+                >
+                  <Navigation className="w-4 h-4 mr-2" />
+                  Navigate
                 </Button>
                 <Button
                   variant="outline"
