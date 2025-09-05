@@ -24,7 +24,6 @@ import {
   Calendar as CalendarIcon
 } from "lucide-react";
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Separator } from "@/components/ui/separator";
 
 const Dashboard = () => {
   const { selectedPlans, updatePlanStatus, removePlan, getPlansByStatus } = usePlans();
